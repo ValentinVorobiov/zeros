@@ -1,23 +1,41 @@
 module.exports = function zeros(expression) {
 
-    function MakeBaseRainbow( lastNum, baseNum ){
-        let currNum, currBaseRepeats = 0, prevNum = 0, prevBaseRepeats = 0;
-        let hashRainbow = new Map();
-        for( currNum = 1; currNum <= lastNum; currNum++ ){
-
-            if( currNum % baseNum == 0 ){
-                currBaseRepeats = prevBaseRepeats + 1;
-            } else {
-                currBaseRepeats = prevBaseRepeats;
-            }
-
-            hashRainbow.set( currNum, currBaseRepeats );
-            prevNum = currNum; prevBaseRepeats = currBaseRepeats;
-
-        }
-
-        return hashRainbow;
+    function isEven( aNumber ){
+        return ( aNumber % 2 == 0 );
     }
+
+    function isOdd( aNumber ){
+        return !isEven( aNumber );
+    }
+
+    function MultiplyEvens( aNumber ){
+        let result = 1n;
+        for ( let i=1; i<= aNumber; i++ ){
+            if( i % 2 == 0 ){
+                result = result * BigInt( i );
+            }
+        }
+        return result;
+    }
+
+    function MultiplyOdds( aNumber ){
+        let result = 1n;
+        for ( let i=1; i<= aNumber; i++ ){
+            if( i % 2 !== 0 ){
+                result = result * BigInt( i );
+            }
+        }
+        return result;
+    }
+
+    function MultiplyAll( aNumber ){
+        let result = 1n;
+        for ( let i=1; i<= aNumber; i++ ){
+            result = result * BigInt( i );
+        }
+        return result;
+    }
+
 
     function SplitExpression( anExpression ){
         let resultArray = anExpression.split('*');
@@ -36,14 +54,10 @@ module.exports = function zeros(expression) {
             let currNumber = parseInt( element );
 
             resultArray.push( 
-                [
-                    currNumber,
-                    { 
-                        reducedFactorial: isReducedFactorial,
-                        numTwos: null,
-                        numFives: null,
-                    }
-                ]
+                { 
+                    number: currNumber,
+                    reducedFactorial: isReducedFactorial,
+                }
             );
 
         } );
@@ -51,14 +65,41 @@ module.exports = function zeros(expression) {
         return resultArray;
     }
 
-    /*                                                              */
-    /*                          TODO List:                          */
-    /*      Each array element from ParseExpression should          */
-    /*    acquire additional fields: numFives and numTwos, where    */
-    /*      will be stored number of specified multiplicators,      */
-    /*          respecting the reducedFactorial field state         */
-    /*                                                              */
+    let parsedExpression = ParseExpression( expression );
+    let accumulatedResult = 1n;
 
+    parsedExpression = parsedExpression.map( ( element ) => { 
+        let currNumber = element[ 'number' ];
+        let currReducedFactorial = element[ 'reducedFactorial' ] ;
+        let currResult = 1n;
+        if( element[ 'reducedFactorial' ] ){
+
+            if( isEven( currNumber) ){
+                currResult = MultiplyEvens( currNumber );
+            } else {
+                currResult = MultiplyOdds( currNumber );
+            }
+        } else {
+            currResult = MultiplyAll( currNumber );
+        }
+
+        accumulatedResult = accumulatedResult * currResult;
+        return { 
+            number: currNumber,
+            reducedFactorial: currReducedFactorial,
+            result: currResult,
+            strResult: currResult.toString(),
+        }
+
+    } );
+
+    let strExpressionResult = accumulatedResult.toString().split( '' ).reverse().join( '' );
+    let trailingZeroes = 0;
+    while( strExpressionResult[ trailingZeroes ] === '0' ){
+        trailingZeroes += 1;
+    }
+
+    return trailingZeroes;
 
   // your solution
 }
